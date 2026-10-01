@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TVET Competency-Based Curriculum (CBC) Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vue 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Custom Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tvet: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#026597',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        gov: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Print specific styling for TVET CBC Formal Document View */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                font-size: 11pt;
+                font-family: 'Times New Roman', Times, serif;
+            }
+            .print-wrapper {
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+            table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+            th, td {
+                border: 1px solid #000000 !important;
+                padding: 6px 8px !important;
+                text-align: left;
+                vertical-align: top;
+            }
+            th {
+                background-color: #f2f2f2 !important;
+                font-weight: bold;
+            }
+            a {
+                text-decoration: none !important;
+                color: #000000 !important;
+            }
+        }
+
+        .print-only {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <div id="app" class="flex-grow flex flex-col">
+
+        <!-- Main Top Header Navigation -->
+        <header class="bg-gov-900 text-white shadow-lg sticky top-0 z-40 no-print">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <!-- Brand / Title -->
+                    <div class="flex items-center space-x-3 cursor-pointer" @click="activeTab = 'dashboard'">
+                        <div class="bg-tvet-600 p-2.5 rounded-lg flex items-center justify-center shadow-md">
+                            <i class="fa-solid fa-graduation-cap text-xl text-white"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-bold text-lg leading-tight tracking-wide">TVET CBC Studio</h1>
+                            <p class="text-xs text-slate-300 font-light">Competency-Based Curriculum Capacity Builder</p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Tabs -->
+                    <nav class="hidden md:flex space-x-1">
+                        <button @click="activeTab = 'dashboard'" 
+                                :class="activeTab === 'dashboard' ? 'bg-gov-800 text-white font-semibold border-b-2 border-tvet-500' : 'text-slate-300 hover:bg-gov-800 hover:text-white'" 
+                                class="px-4 py-2 rounded-t-md text-sm transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-chart-pie"></i>
+                            <span>Dashboard</span>
+                        </button>
+
+                        <button @click="activeTab = 'curricula'" 
+                                :class="activeTab === 'curricula' ? 'bg-gov-800 text-white font-semibold border-b-2 border-tvet-500' : 'text-slate-300 hover:bg-gov-800 hover:text-white'" 
+                                class="px-4 py-2 rounded-t-md text-sm transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span>Curricula Directory</span>
+                            <span class="bg-tvet-600 text-white text-xs px-2 py-0.5 rounded-full ml-1">{{ curricula.length }}</span>
+                        </button>
+
+                        <button @click="activeTab = 'editor'" 
+                                :class="activeTab === 'editor' ? 'bg-gov-800 text-white font-semibold border-b-2 border-tvet-500' : 'text-slate-300 hover:bg-gov-800 hover:text-white'" 
+                                class="px-4 py-2 rounded-t-md text-sm transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>CBC Builder</span>
+                        </button>
+
+                        <button @click="activeTab = 'print'" 
+                                :class="activeTab === 'print' ? 'bg-gov-800 text-white font-semibold border-b-2 border-tvet-500' : 'text-slate-300 hover:bg-gov-800 hover:text-white'" 
+                                class="px-4 py-2 rounded-t-md text-sm transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-file-invoice"></i>
+                            <span>Formal Document View</span>
+                        </button>
+
+                        <button @click="activeTab = 'data'" 
+                                :class="activeTab === 'data' ? 'bg-gov-800 text-white font-semibold border-b-2 border-tvet-500' : 'text-slate-300 hover:bg-gov-800 hover:text-white'" 
+                                class="px-4 py-2 rounded-t-md text-sm transition-all flex items-center space-x-2">
+                            <i class="fa-solid fa-database"></i>
+                            <span>Data & Tools</span>
+                        </button>
+                    </nav>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center space-x-3">
+                        <button @click="createNewCurriculum()" class="bg-tvet-600 hover:bg-tvet-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg font-medium shadow transition flex items-center space-x-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span class="hidden sm:inline">New Curriculum</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Sub-Navigation -->
+            <div class="md:hidden bg-gov-800 px-2 py-2 flex overflow-x-auto space-x-2 no-print border-t border-slate-700">
+                <button @click="activeTab = 'dashboard'" :class="activeTab === 'dashboard' ? 'bg-tvet-600 text-white' : 'text-slate-300'" class="px-3 py-1.5 rounded-md text-xs whitespace-nowrap">Dashboard</button>
+                <button @click="activeTab = 'curricula'" :class="activeTab === 'curricula' ? 'bg-tvet-600 text-white' : 'text-slate-300'" class="px-3 py-1.5 rounded-md text-xs whitespace-nowrap">Curricula ({{ curricula.length }})</button>
+                <button @click="activeTab = 'editor'" :class="activeTab === 'editor' ? 'bg-tvet-600 text-white' : 'text-slate-300'" class="px-3 py-1.5 rounded-md text-xs whitespace-nowrap">Builder</button>
+                <button @click="activeTab = 'print'" :class="activeTab === 'print' ? 'bg-tvet-600 text-white' : 'text-slate-300'" class="px-3 py-1.5 rounded-md text-xs whitespace-nowrap">Print Document</button>
+                <button @click="activeTab = 'data'" :class="activeTab === 'data' ? 'bg-tvet-600 text-white' : 'text-slate-300'" class="px-3 py-1.5 rounded-md text-xs whitespace-nowrap">Data Tools</button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+            <!-- ========================================== -->
+            <!-- TAB 1: DASHBOARD                           -->
+            <!-- ========================================== -->
+            <div v-if="activeTab === 'dashboard'" class="space-y-6">
+                <!-- Welcome Banner -->
+                <div class="bg-gradient-to-r from-gov-900 via-gov-800 to-tvet-900 text-white rounded-xl p-6 shadow-md relative overflow-hidden">
+                    <div class="relative z-10">
+                        <div class="flex items-center space-x-2 text-tvet-100 text-xs font-semibold tracking-wider uppercase mb-1">
+                            <i class="fa-solid fa-award"></i>
+                            <span>TVET Quality Assurance Framework</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-bold">Capacity-Building Competency Studio</h2>
+                        <p class="text-slate-200 mt-2 text-sm sm:text-base max-w-3xl leading-relaxed">
+                            Design, standardize, manage, and print official TVET Competency-Based Curricula (CBC). Align learning outcomes, assessment criteria, learning content, and trainer requirements with national occupational standards.
+                        </p>
+                        <div class="mt-4 flex flex-wrap gap-3">
+                            <button @click="createNewCurriculum()" class="bg-tvet-600 hover:bg-tvet-700 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg shadow transition flex items-center space-x-2">
+                                <i class="fa-solid fa-plus-circle"></i>
+                                <span>Design New CBC Curriculum</span>
+                            </button>
+                            <button @click="activeTab = 'curricula'" class="bg-white/10 hover:bg-white/20 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg backdrop-blur shadow transition flex items-center space-x-2">
+                                <i class="fa-solid fa-folder-open"></i>
+                                <span>Browse Catalog</span>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Background Icon Decoration -->
+                    <i class="fa-solid fa-compass-drafting absolute -right-6 -bottom-6 text-white/5 text-9xl pointer-events-none"></i>
+                </div>
+
+                <!-- Stats Counters Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="bg-blue-50 text-blue-600 p-3.5 rounded-xl text-xl">
+                            <i class="fa-solid fa-book-bookmark"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Curricula</p>
+                            <h3 class="text-2xl font-bold text-slate-800">{{ curricula.length }}</h3>
+                            <p class="text-xs text-emerald-600 mt-0.5"><i class="fa-solid fa-check"></i> Persistent Local Storage</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="bg-amber-50 text-amber-600 p-3.5 rounded-xl text-xl">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Core Competencies</p>
+                            <h3 class="text-2xl font-bold text-slate-800">{{ stats.totalCoreModules }}</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Occupational units defined</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="bg-emerald-50 text-emerald-600 p-3.5 rounded-xl text-xl">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Nominal Training Hours</p>
+                            <h3 class="text-2xl font-bold text-slate-800">{{ stats.totalHours }} <span class="text-xs text-slate-500 font-normal">hrs</span></h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Across all qualifications</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
+                        <div class="bg-purple-50 text-purple-600 p-3.5 rounded-xl text-xl">
+                            <i class="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Sectors Covered</p>
+                            <h3 class="text-2xl font-bold text-slate-800">{{ stats.sectorsCount }}</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">TVET Industry Sectors</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Curricula & Quick Search -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Featured TVET Curricula</h3>
+                            <p class="text-xs text-slate-500">Select a qualification to inspect, edit competencies, or print the standard curriculum document.</p>
+                        </div>
+
+                        <!-- Quick Filters -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <div class="relative">
+                                <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                                <input v-model="searchQuery" type="text" placeholder="Search code or title..." class="pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500 w-48 sm:w-64">
+                            </div>
+
+                            <select v-model="filterSector" class="py-1.5 px-3 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                <option value="">All Sectors</option>
+                                <option v-for="sec in uniqueSectors" :key="sec" :value="sec">{{ sec }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Curricula Cards Grid -->
+                    <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div v-for="item in filteredCurricula" :key="item.id" class="bg-slate-50 rounded-xl border border-slate-200 p-5 hover:border-tvet-500 hover:shadow-md transition flex flex-col justify-between group">
+                            <div>
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="bg-tvet-100 text-tvet-800 text-xs font-bold px-2.5 py-1 rounded-md border border-tvet-200">
+                                        {{ item.code }}
+                                    </span>
+                                    <span :class="getStatusBadgeClass(item.status)" class="text-xs font-medium px-2 py-0.5 rounded-full">
+                                        {{ item.status }}
+                                    </span>
+                                </div>
+                                <h4 class="font-bold text-slate-800 text-base group-hover:text-tvet-700 transition line-clamp-2">{{ item.title }}</h4>
+                                <p class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-sitemap mr-1"></i> {{ item.sector }}</p>
+                                
+                                <p class="text-xs text-slate-600 mt-3 line-clamp-3 leading-relaxed">{{ item.description }}</p>
+
+                                <!-- Details Badges -->
+                                <div class="mt-4 pt-3 border-t border-slate-200 grid grid-cols-3 gap-2 text-center text-xs">
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                        <span class="block text-slate-400 font-medium text-[10px]">LEVEL</span>
+                                        <span class="font-bold text-slate-700">{{ item.level }}</span>
+                                    </div>
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                        <span class="block text-slate-400 font-medium text-[10px]">DURATION</span>
+                                        <span class="font-bold text-tvet-700">{{ calculateTotalHours(item) }} hrs</span>
+                                    </div>
+                                    <div class="bg-white p-2 rounded-lg border border-slate-200">
+                                        <span class="block text-slate-400 font-medium text-[10px]">MODULES</span>
+                                        <span class="font-bold text-slate-700">{{ (item.basicModules?.length||0) + (item.commonModules?.length||0) + (item.coreModules?.length||0) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action Bar -->
+                            <div class="mt-5 pt-3 border-t border-slate-200 flex items-center justify-between text-xs">
+                                <button @click="selectAndEdit(item)" class="text-tvet-700 hover:text-tvet-900 font-semibold flex items-center space-x-1">
+                                    <i class="fa-solid fa-edit"></i>
+                                    <span>Edit Curriculum</span>
+                                </button>
+                                
+                                <div class="flex items-center space-x-2">
+                                    <button @click="selectAndPrint(item)" title="Print Formal CBC Layout" class="text-slate-600 hover:text-slate-900 bg-white p-2 rounded border border-slate-200 hover:bg-slate-100">
+                                        <i class="fa-solid fa-print"></i>
+                                    </button>
+                                    <button @click="duplicateCurriculum(item)" title="Duplicate" class="text-slate-600 hover:text-slate-900 bg-white p-2 rounded border border-slate-200 hover:bg-slate-100">
+                                        <i class="fa-solid fa-copy"></i>
+                                    </button>
+                                    <button @click="confirmDelete(item)" title="Delete" class="text-rose-600 hover:text-rose-800 bg-white p-2 rounded border border-slate-200 hover:bg-rose-50">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB 2: CURRICULA DIRECTORY / LIST VIEW     -->
+            <!-- ========================================== -->
+            <div v-if="activeTab === 'curricula'" class="space-y-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">TVET Qualification Directory</h2>
+                            <p class="text-xs text-slate-500">Comprehensive inventory of registered competency-based training regulations & curricula.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <input v-model="searchQuery" type="text" placeholder="Search title or code..." class="px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500 w-60">
+                            
+                            <select v-model="filterSector" class="px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                <option value="">All Sectors</option>
+                                <option v-for="sec in uniqueSectors" :key="sec" :value="sec">{{ sec }}</option>
+                            </select>
+
+                            <select v-model="filterLevel" class="px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                <option value="">All Levels</option>
+                                <option value="Level 1 / NC I">Level 1 / NC I</option>
+                                <option value="Level 2 / NC II">Level 2 / NC II</option>
+                                <option value="Level 3 / NC III">Level 3 / NC III</option>
+                                <option value="Level 4 / NC IV">Level 4 / NC IV</option>
+                                <option value="Level 5 / Diploma">Level 5 / Diploma</option>
+                            </select>
+
+                            <button @click="createNewCurriculum()" class="bg-tvet-600 hover:bg-tvet-700 text-white text-xs px-3 py-2 rounded-lg font-medium shadow flex items-center space-x-1">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Create Qualification</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Data Table -->
+                    <div class="overflow-x-auto rounded-lg border border-slate-200">
+                        <table class="w-full text-left text-xs text-slate-700">
+                            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold text-[11px] border-b border-slate-200">
+                                <tr>
+                                    <th class="px-4 py-3">Code</th>
+                                    <th class="px-4 py-3">Qualification Title</th>
+                                    <th class="px-4 py-3">Sector</th>
+                                    <th class="px-4 py-3">Level</th>
+                                    <th class="px-4 py-3 text-center">Nominal Hours</th>
+                                    <th class="px-4 py-3 text-center">Modules</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 bg-white">
+                                <tr v-for="item in filteredCurricula" :key="item.id" class="hover:bg-slate-50 transition">
+                                    <td class="px-4 py-3 font-bold text-tvet-700 whitespace-nowrap">{{ item.code }}</td>
+                                    <td class="px-4 py-3 font-semibold text-slate-800">{{ item.title }}</td>
+                                    <td class="px-4 py-3 text-slate-600">{{ item.sector }}</td>
+                                    <td class="px-4 py-3 whitespace-nowrap">{{ item.level }}</td>
+                                    <td class="px-4 py-3 text-center font-bold text-slate-800">{{ calculateTotalHours(item) }} hrs</td>
+                                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                                        <span class="bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-slate-700 font-medium">
+                                            {{ (item.basicModules?.length||0) + (item.commonModules?.length||0) + (item.coreModules?.length||0) }} units
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 whitespace-nowrap">
+                                        <span :class="getStatusBadgeClass(item.status)" class="text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                                            {{ item.status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right whitespace-nowrap space-x-1">
+                                        <button @click="selectAndEdit(item)" class="bg-tvet-50 text-tvet-700 hover:bg-tvet-100 px-2.5 py-1 rounded font-medium transition" title="Edit Builder">
+                                            <i class="fa-solid fa-pen"></i> Edit
+                                        </button>
+                                        <button @click="selectAndPrint(item)" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-2.5 py-1 rounded font-medium transition" title="Print View">
+                                            <i class="fa-solid fa-print"></i>
+                                        </button>
+                                        <button @click="duplicateCurriculum(item)" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-2.5 py-1 rounded font-medium transition" title="Duplicate">
+                                            <i class="fa-solid fa-copy"></i>
+                                        </button>
+                                        <button @click="confirmDelete(item)" class="bg-rose-50 text-rose-600 hover:bg-rose-100 px-2.5 py-1 rounded font-medium transition" title="Delete">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr v-if="filteredCurricula.length === 0">
+                                    <td colspan="8" class="text-center py-8 text-slate-400">
+                                        <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+                                        No competency curricula found matching your query.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB 3: CBC BUILDER / EDIT VIEW             -->
+            <!-- ========================================== -->
+            <div v-if="activeTab === 'editor'" class="space-y-6">
+                <!-- Editor Bar -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center space-x-3">
+                        <button @click="activeTab = 'curricula'" class="text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-arrow-left text-lg"></i>
+                        </button>
+                        <div>
+                            <span class="text-xs font-bold text-tvet-600 uppercase tracking-wider">CBC Curriculum Builder</span>
+                            <h2 class="text-xl font-bold text-slate-800">{{ activeCurriculum.title || 'Untitled Curriculum' }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button @click="saveCurriculum(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow transition flex items-center space-x-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Save Curriculum</span>
+                        </button>
+                        <button @click="activeTab = 'print'" class="bg-gov-800 hover:bg-gov-900 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow transition flex items-center space-x-2">
+                            <i class="fa-solid fa-eye"></i>
+                            <span>Preview Official Layout</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Builder Tabs / Sections -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-200 bg-slate-50 px-4 flex overflow-x-auto space-x-4">
+                        <button @click="editorSubTab = 'general'" :class="editorSubTab === 'general' ? 'border-b-2 border-tvet-600 text-tvet-700 font-bold' : 'text-slate-600'" class="py-3 px-2 text-xs whitespace-nowrap transition">
+                            <i class="fa-solid fa-sliders mr-1"></i> 1. General & Course Design
+                        </button>
+                        <button @click="editorSubTab = 'basic_common'" :class="editorSubTab === 'basic_common' ? 'border-b-2 border-tvet-600 text-tvet-700 font-bold' : 'text-slate-600'" class="py-3 px-2 text-xs whitespace-nowrap transition">
+                            <i class="fa-solid fa-layer-group mr-1"></i> 2. Basic & Common Competencies
+                        </button>
+                        <button @click="editorSubTab = 'core'" :class="editorSubTab === 'core' ? 'border-b-2 border-tvet-600 text-tvet-700 font-bold' : 'text-slate-600'" class="py-3 px-2 text-xs whitespace-nowrap transition">
+                            <i class="fa-solid fa-cubes mr-1"></i> 3. Core Competencies & Learning Outcomes
+                        </button>
+                        <button @click="editorSubTab = 'resources'" :class="editorSubTab === 'resources' ? 'border-b-2 border-tvet-600 text-tvet-700 font-bold' : 'text-slate-600'" class="py-3 px-2 text-xs whitespace-nowrap transition">
+                            <i class="fa-solid fa-screwdriver-wrench mr-1"></i> 4. Entry, Trainer & Resources
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+                        <!-- Sub-Tab 1: General Info -->
+                        <div v-if="editorSubTab === 'general'" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Qualification Code *</label>
+                                    <input v-model="activeCurriculum.code" type="text" placeholder="e.g. ICT40215-NC4" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Qualification Title *</label>
+                                    <input v-model="activeCurriculum.title" type="text" placeholder="e.g. Full-Stack Web Development Level 4" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Sector *</label>
+                                    <input v-model="activeCurriculum.sector" type="text" placeholder="e.g. Information & Communications Technology" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Qualification Level</label>
+                                    <select v-model="activeCurriculum.level" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                        <option value="Level 1 / NC I">Level 1 / NC I</option>
+                                        <option value="Level 2 / NC II">Level 2 / NC II</option>
+                                        <option value="Level 3 / NC III">Level 3 / NC III</option>
+                                        <option value="Level 4 / NC IV">Level 4 / NC IV</option>
+                                        <option value="Level 5 / Diploma">Level 5 / Diploma</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Approval Status</label>
+                                    <select v-model="activeCurriculum.status" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                        <option value="Draft">Draft</option>
+                                        <option value="Under Review">Under Review</option>
+                                        <option value="Approved">Approved</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Version</label>
+                                    <input v-model="activeCurriculum.version" type="text" placeholder="1.0" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">Course Description *</label>
+                                <textarea v-model="activeCurriculum.description" rows="4" placeholder="Comprehensive statement describing the purpose, scope and core competencies embedded in this TVET course..." class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500"></textarea>
+                            </div>
+
+                            <!-- Total Hours Overview Banner -->
+                            <div class="bg-tvet-50 border border-tvet-200 rounded-xl p-4 flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="bg-tvet-600 text-white p-2.5 rounded-lg">
+                                        <i class="fa-solid fa-calculator"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-tvet-900">Total Nominal Duration</h4>
+                                        <p class="text-xs text-tvet-700">Calculated sum of Basic, Common, and Core competency unit hours.</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="text-2xl font-black text-tvet-800">{{ calculateTotalHours(activeCurriculum) }}</span>
+                                    <span class="text-xs text-tvet-600 font-bold ml-1">Hours</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Tab 2: Basic & Common Competencies -->
+                        <div v-if="editorSubTab === 'basic_common'" class="space-y-8">
+                            <!-- Basic Competencies -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+                                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded">Basic</span>
+                                            <span>Basic Competencies (Workplace Foundation)</span>
+                                        </h3>
+                                    </div>
+                                    <button @click="addBasicModule()" class="text-xs bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg font-medium transition">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add Basic Unit
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div v-for="(mod, idx) in activeCurriculum.basicModules" :key="mod.id" class="bg-slate-50 border border-slate-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                                        <div class="md:col-span-2">
+                                            <input v-model="mod.code" type="text" placeholder="Unit Code" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded">
+                                        </div>
+                                        <div class="md:col-span-5">
+                                            <input v-model="mod.title" type="text" placeholder="Unit Title" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded font-semibold">
+                                        </div>
+                                        <div class="md:col-span-3">
+                                            <input v-model="mod.descriptor" type="text" placeholder="Short Descriptor" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded">
+                                        </div>
+                                        <div class="md:col-span-1 flex items-center space-x-1">
+                                            <input v-model.number="mod.hours" type="number" min="0" placeholder="Hrs" class="w-full px-2 py-1.5 text-xs bg-white border border-slate-300 rounded text-center">
+                                            <span class="text-[10px] text-slate-400">hrs</span>
+                                        </div>
+                                        <div class="md:col-span-1 text-right">
+                                            <button @click="removeBasicModule(idx)" class="text-rose-500 hover:text-rose-700 p-1">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Common Competencies -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+                                            <span class="bg-purple-100 text-purple-800 text-xs px-2 py-0.5 rounded">Common</span>
+                                            <span>Common Competencies (Sector Skills)</span>
+                                        </h3>
+                                    </div>
+                                    <button @click="addCommonModule()" class="text-xs bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 px-3 py-1.5 rounded-lg font-medium transition">
+                                        <i class="fa-solid fa-plus mr-1"></i> Add Common Unit
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div v-for="(mod, idx) in activeCurriculum.commonModules" :key="mod.id" class="bg-slate-50 border border-slate-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                                        <div class="md:col-span-2">
+                                            <input v-model="mod.code" type="text" placeholder="Unit Code" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded">
+                                        </div>
+                                        <div class="md:col-span-5">
+                                            <input v-model="mod.title" type="text" placeholder="Unit Title" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded font-semibold">
+                                        </div>
+                                        <div class="md:col-span-3">
+                                            <input v-model="mod.descriptor" type="text" placeholder="Short Descriptor" class="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-300 rounded">
+                                        </div>
+                                        <div class="md:col-span-1 flex items-center space-x-1">
+                                            <input v-model.number="mod.hours" type="number" min="0" placeholder="Hrs" class="w-full px-2 py-1.5 text-xs bg-white border border-slate-300 rounded text-center">
+                                            <span class="text-[10px] text-slate-400">hrs</span>
+                                        </div>
+                                        <div class="md:col-span-1 text-right">
+                                            <button @click="removeCommonModule(idx)" class="text-rose-500 hover:text-rose-700 p-1">
+                                                <i class="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Tab 3: Core Competencies & Detailed LO Builder -->
+                        <div v-if="editorSubTab === 'core'" class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-800">Core Competencies (Occupational Specific Modules)</h3>
+                                    <p class="text-xs text-slate-500">Detailed modules containing Learning Outcomes (LOs), Performance Assessment Criteria, Content, Assessment Methods, and Equipment.</p>
+                                </div>
+                                <button @click="addCoreModule()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg font-semibold shadow transition">
+                                    <i class="fa-solid fa-plus mr-1"></i> Add Core Module
+                                </button>
+                            </div>
+
+                            <div v-for="(mod, mIdx) in activeCurriculum.coreModules" :key="mod.id" class="bg-white border-2 border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                                <!-- Core Module Header -->
+                                <div class="bg-slate-100 p-4 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                                    <div class="flex items-center space-x-3 flex-grow">
+                                        <span class="bg-emerald-700 text-white font-bold text-xs px-2.5 py-1 rounded">Core Unit #{{ mIdx + 1 }}</span>
+                                        <input v-model="mod.code" type="text" placeholder="Unit Code (e.g. ICT411301)" class="w-36 px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-semibold">
+                                        <input v-model="mod.title" type="text" placeholder="Core Unit Title" class="flex-grow px-2.5 py-1 text-xs bg-white border border-slate-300 rounded font-bold text-slate-800">
+                                    </div>
+
+                                    <div class="flex items-center space-x-3">
+                                        <div class="flex items-center space-x-1">
+                                            <span class="text-xs font-semibold text-slate-600">Hours:</span>
+                                            <input v-model.number="mod.hours" type="number" min="0" class="w-16 px-2 py-1 text-xs bg-white border border-slate-300 rounded text-center font-bold">
+                                        </div>
+                                        <button @click="generateAILearningOutcomes(mod)" title="Scaffold standard TVET LO structure" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 text-xs px-2.5 py-1 rounded font-medium transition flex items-center space-x-1">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                                            <span>AI Scaffold</span>
+                                        </button>
+                                        <button @click="removeCoreModule(mIdx)" class="text-rose-600 hover:text-rose-800 p-1">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 space-y-4">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-600 uppercase mb-1">Module Descriptor</label>
+                                        <input v-model="mod.descriptor" type="text" placeholder="Brief summary of what this core module covers..." class="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded">
+                                    </div>
+
+                                    <!-- Learning Outcomes List -->
+                                    <div class="mt-4 pt-4 border-t border-slate-200">
+                                        <div class="flex justify-between items-center mb-3">
+                                            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider"><i class="fa-solid fa-list-ol text-tvet-600 mr-1"></i> Learning Outcomes (LOs)</h4>
+                                            <button @click="addLO(mod)" class="text-[11px] bg-tvet-50 text-tvet-700 border border-tvet-200 hover:bg-tvet-100 px-2.5 py-1 rounded font-medium">
+                                                <i class="fa-solid fa-plus mr-1"></i> Add LO
+                                            </button>
+                                        </div>
+
+                                        <div class="space-y-4">
+                                            <div v-for="(lo, loIdx) in mod.learningOutcomes" :key="lo.id" class="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <input v-model="lo.title" type="text" placeholder="e.g. LO1: Design user interfaces and interactive wireframes" class="flex-grow px-3 py-1.5 text-xs bg-white border border-slate-300 rounded font-bold text-slate-800">
+                                                    <button @click="removeLO(mod, loIdx)" class="text-rose-500 hover:text-rose-700 p-1">
+                                                        <i class="fa-solid fa-times"></i>
+                                                    </button>
+                                                </div>
+
+                                                <!-- Assessment Criteria -->
+                                                <div>
+                                                    <div class="flex justify-between items-center mb-1">
+                                                        <span class="text-[11px] font-semibold text-slate-600">Performance Assessment Criteria (Bullet Statements):</span>
+                                                        <button @click="addCriteria(lo)" class="text-[10px] text-tvet-600 hover:underline font-semibold">+ Add Criteria</button>
+                                                    </div>
+                                                    <div class="space-y-1.5">
+                                                        <div v-for="(crit, cIdx) in lo.criteria" :key="cIdx" class="flex items-center space-x-2">
+                                                            <span class="text-[10px] text-slate-400 font-bold">•</span>
+                                                            <input v-model="lo.criteria[cIdx]" type="text" placeholder="Performance criterion statement..." class="flex-grow px-2 py-1 text-xs bg-white border border-slate-300 rounded">
+                                                            <button @click="lo.criteria.splice(cIdx, 1)" class="text-slate-400 hover:text-rose-500 text-xs">
+                                                                <i class="fa-solid fa-minus-circle"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-slate-200">
+                                                    <div>
+                                                        <label class="block text-[10px] font-semibold text-slate-500 uppercase">Learning Content (Knowledge/Skills)</label>
+                                                        <textarea v-model="lo.content" rows="2" placeholder="Underpinning knowledge and practical skills..." class="w-full px-2 py-1 text-xs bg-white border border-slate-300 rounded"></textarea>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[10px] font-semibold text-slate-500 uppercase">Assessment Methods</label>
+                                                        <textarea v-model="lo.methods" rows="2" placeholder="e.g. Written test, Practical demo, Portfolio..." class="w-full px-2 py-1 text-xs bg-white border border-slate-300 rounded"></textarea>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-[10px] font-semibold text-slate-500 uppercase">Required Tools & Equipment</label>
+                                                        <textarea v-model="lo.resources" rows="2" placeholder="List key training tools and equipment..." class="w-full px-2 py-1 text-xs bg-white border border-slate-300 rounded"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sub-Tab 4: Resources, Entry & Trainer Specs -->
+                        <div v-if="editorSubTab === 'resources'" class="space-y-6">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1"><i class="fa-solid fa-user-graduate mr-1"></i> Trainee Entry Requirements</label>
+                                <textarea v-model="activeCurriculum.entryRequirements" rows="3" placeholder="Educational attainment, required physical requirements, or prior competencies..." class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1"><i class="fa-solid fa-chalkboard-user mr-1"></i> Trainer Qualifications</label>
+                                <textarea v-model="activeCurriculum.trainerQualifications" rows="3" placeholder="Certification level (NTTC), teaching methodology, industry experience required..." class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1"><i class="fa-solid fa-clipboard-check mr-1"></i> Institutional Assessment Strategy</label>
+                                <textarea v-model="activeCurriculum.assessmentStrategy" rows="3" placeholder="Methodology for conducting formative and summative competency evaluation..." class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1"><i class="fa-solid fa-warehouse mr-1"></i> Resource Requirements & Facilities Matrix</label>
+                                <textarea v-model="activeCurriculum.resourceRequirements" rows="3" placeholder="List of equipment, consumable materials, workshop size, and tools needed..." class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tvet-500"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB 4: TVET FORMAL DOCUMENT VIEW & PRINT   -->
+            <!-- ========================================== -->
+            <div v-if="activeTab === 'print'" class="space-y-6">
+                <!-- Floating Action Toolbar (Hidden during print) -->
+                <div class="bg-gov-900 text-white rounded-xl p-4 shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4 no-print">
+                    <div>
+                        <h3 class="font-bold text-base">Formal TVET Curriculum Document View</h3>
+                        <p class="text-xs text-slate-300">Formatted according to TVET Quality Management & Assessment Document standards.</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button @click="triggerPrint()" class="bg-tvet-600 hover:bg-tvet-700 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow transition flex items-center space-x-2">
+                            <i class="fa-solid fa-print"></i>
+                            <span>Print Official Document</span>
+                        </button>
+                        <button @click="exportSingleJSON(activeCurriculum)" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-2 rounded-lg font-semibold transition flex items-center space-x-2">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Export JSON</span>
+                        </button>
+                        <button @click="activeTab = 'editor'" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-lg transition">
+                            Back to Editor
+                        </button>
+                    </div>
+                </div>
+
+                <!-- FORMAL PRINTABLE CURRICULUM CONTAINER -->
+                <div class="print-wrapper bg-white rounded-xl border border-slate-300 p-8 sm:p-12 shadow-md max-w-5xl mx-auto text-slate-900 font-serif leading-relaxed">
+                    
+                    <!-- Official Header Section -->
+                    <div class="text-center border-b-2 border-slate-900 pb-6 mb-8">
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="text-left font-sans text-xs">
+                                <span class="font-bold uppercase tracking-wider block">NATIONAL TVET AUTHORITY</span>
+                                <span class="text-slate-500">Quality Assurance & Curriculum Division</span>
+                            </div>
+                            <div class="bg-gov-900 text-white font-sans text-[10px] font-bold px-3 py-1 rounded uppercase tracking-widest">
+                                CBC DOCUMENT CONTROL NO: {{ activeCurriculum.code }}-{{ activeCurriculum.version }}
+                            </div>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-black uppercase tracking-tight text-slate-900 font-sans">COMPETENCY-BASED CURRICULUM</h1>
+                        <h2 class="text-xl font-bold text-slate-800 mt-2 font-sans">{{ activeCurriculum.title }}</h2>
+                        <div class="mt-3 flex flex-wrap justify-center gap-4 text-xs font-sans font-semibold text-slate-700">
+                            <span>SECTOR: <u class="text-tvet-800">{{ activeCurriculum.sector }}</u></span> |
+                            <span>QUALIFICATION LEVEL: <u class="text-tvet-800">{{ activeCurriculum.level }}</u></span> |
+                            <span>NOMINAL DURATION: <u class="text-tvet-800">{{ calculateTotalHours(activeCurriculum) }} HOURS</u></span>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 1: COURSE DESIGN -->
+                    <div class="mb-8 space-y-4">
+                        <h3 class="text-base font-bold uppercase border-b border-slate-800 pb-1 font-sans text-slate-900 flex items-center">
+                            <span>SECTION 1: COURSE DESIGN</span>
+                        </h3>
+                        
+                        <p class="text-xs text-justify font-sans leading-relaxed">
+                            <strong>COURSE DESCRIPTION:</strong> {{ activeCurriculum.description }}
+                        </p>
+
+                        <div class="font-sans text-xs space-y-2">
+                            <p><strong>TRAINEE ENTRY REQUIREMENTS:</strong> {{ activeCurriculum.entryRequirements || 'Standard secondary education completion or equivalent RPL evaluation.' }}</p>
+                            <p><strong>TRAINER QUALIFICATIONS:</strong> {{ activeCurriculum.trainerQualifications || 'Certified TVET Trainer holder with minimum 3 years industry practice.' }}</p>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: SUMMARY OF COMPETENCY MODULES -->
+                    <div class="mb-8 space-y-4">
+                        <h3 class="text-base font-bold uppercase border-b border-slate-800 pb-1 font-sans text-slate-900">
+                            SECTION 2: SUMMARY OF COMPETENCY MODULES
+                        </h3>
+
+                        <table class="w-full text-xs font-sans border-collapse border border-slate-900">
+                            <thead class="bg-slate-100 uppercase text-[11px]">
+                                <tr>
+                                    <th class="border border-slate-900 px-3 py-2 w-28">Unit Code</th>
+                                    <th class="border border-slate-900 px-3 py-2">Unit Title / Module Descriptor</th>
+                                    <th class="border border-slate-900 px-3 py-2 text-center w-24">Category</th>
+                                    <th class="border border-slate-900 px-3 py-2 text-center w-20">Nominal Hrs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Basic -->
+                                <tr v-for="b in activeCurriculum.basicModules" :key="b.id">
+                                    <td class="border border-slate-900 px-3 py-1.5 font-bold">{{ b.code }}</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 font-semibold">{{ b.title }}</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 text-center font-bold text-blue-800">Basic</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 text-center font-bold">{{ b.hours }}</td>
+                                </tr>
+                                <!-- Common -->
+                                <tr v-for="c in activeCurriculum.commonModules" :key="c.id">
+                                    <td class="border border-slate-900 px-3 py-1.5 font-bold">{{ c.code }}</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 font-semibold">{{ c.title }}</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 text-center font-bold text-purple-800">Common</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 text-center font-bold">{{ c.hours }}</td>
+                                </tr>
+                                <!-- Core -->
+                                <tr v-for="m in activeCurriculum.coreModules" :key="m.id">
+                                    <td class="border border-slate-900 px-3 py-1.5 font-bold">{{ m.code }}</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 font-semibold">{{ m.title }}</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 text-center font-bold text-emerald-800">Core</td>
+                                    <td class="border border-slate-900 px-3 py-1.5 text-center font-bold">{{ m.hours }}</td>
+                                </tr>
+                                <tr class="bg-slate-100 font-bold">
+                                    <td colspan="3" class="border border-slate-900 px-3 py-2 text-right">TOTAL NOMINAL HOURS:</td>
+                                    <td class="border border-slate-900 px-3 py-2 text-center">{{ calculateTotalHours(activeCurriculum) }} HRS</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- SECTION 3: DETAILED MODULES OF INSTRUCTION -->
+                    <div class="mb-8 space-y-6 page-break">
+                        <h3 class="text-base font-bold uppercase border-b border-slate-800 pb-1 font-sans text-slate-900">
+                            SECTION 3: DETAILED MODULES OF INSTRUCTION (CORE COMPETENCIES)
+                        </h3>
+
+                        <div v-for="(m, idx) in activeCurriculum.coreModules" :key="m.id" class="space-y-4 pt-2">
+                            <div class="bg-slate-100 p-3 border border-slate-900 font-sans">
+                                <h4 class="font-bold text-sm uppercase">MODULE {{ idx + 1 }}: {{ m.title }}</h4>
+                                <div class="flex justify-between text-xs mt-1">
+                                    <span><strong>UNIT CODE:</strong> {{ m.code }}</span>
+                                    <span><strong>NOMINAL DURATION:</strong> {{ m.hours }} Hours</span>
+                                </div>
+                                <p class="text-xs mt-2 text-slate-700"><strong>DESCRIPTOR:</strong> {{ m.descriptor }}</p>
+                            </div>
+
+                            <!-- LO Table -->
+                            <table class="w-full text-xs font-sans border-collapse border border-slate-900">
+                                <thead class="bg-slate-200">
+                                    <tr>
+                                        <th class="border border-slate-900 px-3 py-1.5 w-1/3">Learning Outcome (LO)</th>
+                                        <th class="border border-slate-900 px-3 py-1.5">Performance Assessment Criteria</th>
+                                        <th class="border border-slate-900 px-3 py-1.5 w-1/4">Assessment Methods</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="lo in m.learningOutcomes" :key="lo.id">
+                                        <td class="border border-slate-900 px-3 py-2 font-bold bg-slate-50">
+                                            {{ lo.title }}
+                                            <div class="mt-2 text-[10px] font-normal text-slate-600">
+                                                <strong>Content:</strong> {{ lo.content }}
+                                            </div>
+                                        </td>
+                                        <td class="border border-slate-900 px-3 py-2">
+                                            <ul class="list-disc pl-4 space-y-1">
+                                                <li v-for="crit in lo.criteria" :key="crit">{{ crit }}</li>
+                                            </ul>
+                                        </td>
+                                        <td class="border border-slate-900 px-3 py-2 font-medium">
+                                            {{ lo.methods }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: INSTITUTIONAL APPROVAL SIGN-OFF BLOCK -->
+                    <div class="pt-8 border-t-2 border-slate-900 page-break">
+                        <h3 class="text-base font-bold uppercase font-sans text-slate-900 mb-6">
+                            SECTION 4: INSTITUTIONAL CURRICULUM APPROVAL & ENDORSEMENT
+                        </h3>
+
+                        <div class="grid grid-cols-3 gap-6 font-sans text-xs text-center">
+                            <div class="space-y-12">
+                                <p class="font-bold">PREPARED BY:</p>
+                                <div class="border-b border-slate-900 mx-4"></div>
+                                <p class="font-bold">TVET Capacity Building Specialist</p>
+                                <p class="text-[10px] text-slate-500">Curriculum Development Committee</p>
+                            </div>
+
+                            <div class="space-y-12">
+                                <p class="font-bold">REVIEWED BY:</p>
+                                <div class="border-b border-slate-900 mx-4"></div>
+                                <p class="font-bold">Industry Technical Panel Chair</p>
+                                <p class="text-[10px] text-slate-500">Sector Skills Council Representative</p>
+                            </div>
+
+                            <div class="space-y-12">
+                                <p class="font-bold">APPROVED BY:</p>
+                                <div class="border-b border-slate-900 mx-4"></div>
+                                <p class="font-bold">Director General / Authority Chair</p>
+                                <p class="text-[10px] text-slate-500">National TVET Qualification Board</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ========================================== -->
+            <!-- TAB 5: DATA TOOLS & BACKUP                 -->
+            <!-- ========================================== -->
+            <div v-if="activeTab === 'data'" class="space-y-6">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-slate-800 mb-1">Data Management & Backup Tools</h2>
+                    <p class="text-xs text-slate-500 mb-6">Export curricula database to JSON or CSV formats, restore backups, or reload standard TVET demo sets.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- JSON Backup Export -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
+                            <div>
+                                <div class="bg-tvet-100 text-tvet-700 w-10 h-10 rounded-lg flex items-center justify-center text-lg mb-3">
+                                    <i class="fa-solid fa-file-code"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-800 text-sm">Export Full Database (JSON)</h3>
+                                <p class="text-xs text-slate-500 mt-1">Download complete set of all registered TVET curricula into JSON file format for offline backup.</p>
+                            </div>
+                            <button @click="exportAllJSON()" class="mt-4 bg-tvet-600 hover:bg-tvet-700 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow transition">
+                                Download JSON Backup
+                            </button>
+                        </div>
+
+                        <!-- CSV Summary Export -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
+                            <div>
+                                <div class="bg-emerald-100 text-emerald-700 w-10 h-10 rounded-lg flex items-center justify-center text-lg mb-3">
+                                    <i class="fa-solid fa-file-csv"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-800 text-sm">Export Qualification List (CSV)</h3>
+                                <p class="text-xs text-slate-500 mt-1">Download tabular CSV summary of titles, codes, sectors, levels, and nominal hours for spreadsheet analysis.</p>
+                            </div>
+                            <button @click="exportCSV()" class="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow transition">
+                                Download CSV Directory
+                            </button>
+                        </div>
+
+                        <!-- Import JSON File -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col justify-between">
+                            <div>
+                                <div class="bg-purple-100 text-purple-700 w-10 h-10 rounded-lg flex items-center justify-center text-lg mb-3">
+                                    <i class="fa-solid fa-file-import"></i>
+                                </div>
+                                <h3 class="font-bold text-slate-800 text-sm">Import Curricula (JSON)</h3>
+                                <p class="text-xs text-slate-500 mt-1">Upload a previously exported `.json` CBC curriculum file to import into Studio.</p>
+                            </div>
+                            <label class="mt-4 bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-lg font-semibold shadow transition text-center cursor-pointer">
+                                <span>Select & Upload JSON</span>
+                                <input type="file" accept=".json" @change="importJSON" class="hidden">
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Reset to Defaults -->
+                    <div class="mt-8 pt-6 border-t border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-bold text-xs text-slate-800">Restore Sample Curricula</h4>
+                            <p class="text-xs text-slate-500">Reset local dataset back to standard TVET sample qualifications (Web Dev Level 4, Solar PV NC III, Automotive Diagnostics Level 2).</p>
+                        </div>
+                        <button @click="resetToDefaults()" class="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 text-xs px-3 py-2 rounded-lg font-semibold transition">
+                            Reset All Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- CONFIRMATION MODAL -->
+        <div v-if="modal.show" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 border border-slate-200">
+                <div class="flex items-center space-x-3 text-rose-600">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                    <h3 class="font-bold text-lg text-slate-800">{{ modal.title }}</h3>
+                </div>
+                <p class="text-xs text-slate-600 leading-relaxed">{{ modal.message }}</p>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button @click="modal.show = false" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button @click="confirmModalAction()" class="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOAST NOTIFICATIONS -->
+        <div class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none">
+            <div v-for="t in toasts" :key="t.id" class="pointer-events-auto bg-gov-900 text-white px-4 py-3 rounded-lg shadow-xl border border-slate-700 flex items-center space-x-3 text-xs min-w-[260px] animate-bounce-short">
+                <i :class="t.type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-info text-tvet-400'"></i>
+                <span>{{ t.message }}</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VUE 3 APPLICATION LOGIC SCRIPT              -->
+    <!-- ========================================== -->
+    <script>
+        const { createApp, ref, computed, onMounted, watch } = Vue;
+
+        // Sample authentic TVET Curricula dataset
+        const DEFAULT_CURRICULA = [
+            {
+                id: "cbc-001",
+                title: "Full-Stack Web Development & Software Engineering",
+                code: "ICT40215-NC4",
+                sector: "Information & Communications Technology",
+                level: "Level 4 / NC IV",
+                status: "Approved",
+                version: "2.1",
+                description: "This course equips TVET trainees with industry-aligned competencies in full-stack web application development, responsive frontend engineering, database design, secure RESTful microservices, and continuous cloud deployment.",
+                entryRequirements: "Completion of Secondary Education or equivalent TVET Level 3 ICT qualification; basic computer literacy and passing mark in entry technical test.",
+                trainerQualifications: "1. Holder of National TVET Trainer Certificate (NTTC Level IV) or equivalent.\n2. Minimum 3 years active industry experience in Software Development.\n3. Certified in Web Technologies or relevant stack.",
+                assessmentStrategy: "1. Institutional Competency Assessment.\n2. Demonstration of practical web development project.\n3. Portfolio evaluation and oral questioning.",
+                resourceRequirements: "1. Computer Lab with 25 High-spec Workstations.\n2. High-speed Fiber Internet (100 Mbps).\n3. Cloud Deployment Sandbox Accounts & Smart Projector.",
+                basicModules: [
+                    { id: "b1", code: "500311105", title: "Lead Workplace Communication", hours: 10, descriptor: "Covers leading technical discussions and preparing formal client reports." },
+                    { id: "b2", code: "500311106", title: "Lead Small Teams & Work Ethics", hours: 10, descriptor: "Covers agile team leadership, conflict management, and ethical coding standards." },
+                    { id: "b3", code: "500311107", title: "Apply Critical Thinking & Technical Problem Solving", hours: 10, descriptor: "Covers analyzing complex software bugs and applying systematic architectural solutions." },
+                    { id: "b4", code: "500311108", title: "Practice Environmental & Cybersecurity Standards", hours: 10, descriptor: "Covers ergonomic workstation posture, e-waste recycling, and data privacy compliance." }
+                ],
+                commonModules: [
+                    { id: "c1", code: "ICT311201", title: "Apply Quality Standards in Software Engineering", hours: 30, descriptor: "Covers code review standards, documentation, and automated testing protocols." },
+                    { id: "c2", code: "ICT311202", title: "Perform Computer Systems & Security Operations", hours: 50, descriptor: "Covers operating system command-line operations, network protocols, and environment configuration." }
+                ],
+                coreModules: [
+                    {
+                        id: "m1",
+                        code: "ICT411301",
+                        title: "Develop Front-End Web Applications using Modern Frameworks",
+                        hours: 70,
+                        descriptor: "Focuses on designing responsive user interfaces, dynamic components, and integrating RESTful APIs using modern frontend frameworks.",
+                        learningOutcomes: [
+                            {
+                                id: "lo1",
+                                title: "LO1: Design responsive user interface wireframes and mockups",
+                                criteria: [
+                                    "User requirements and design briefs are analyzed according to project specifications.",
+                                    "Wireframes and high-fidelity mockups are created using standard UI prototyping tools.",
+                                    "Responsive layout breakpoints (mobile, tablet, desktop) are established."
+                                ],
+                                content: "Knowledge: UI/UX Principles, CSS Grid & Flexbox, WCAG Accessibility.\nSkills: Wireframing, CSS utility frameworks.",
+                                methods: "Practical Demonstration, Project Portfolio Review, Oral Questioning",
+                                resources: "Figma/Penpot software, Workstation, Screen guidelines"
+                            },
+                            {
+                                id: "lo2",
+                                title: "LO2: Implement dynamic components and client state management",
+                                criteria: [
+                                    "Component-based architecture is structured following standard web patterns.",
+                                    "Reactive state management is implemented to handle complex user interactions.",
+                                    "Asynchronous REST API endpoints are consumed with proper error handling."
+                                ],
+                                content: "Knowledge: JavaScript ES6+, Reactive Frameworks, State stores.\nSkills: Modular coding, async API handling.",
+                                methods: "Hands-on Live Coding Exam, Code Review",
+                                resources: "Node.js environment, Modern IDE, REST test APIs"
+                            }
+                        ]
+                    },
+                    {
+                        id: "m2",
+                        code: "ICT411302",
+                        title: "Build Back-End Services, RESTful APIs & Relational Databases",
+                        hours: 70,
+                        descriptor: "Covers designing normalized database schemas, creating secure server endpoints, and implementing JWT authentication.",
+                        learningOutcomes: [
+                            {
+                                id: "lo21",
+                                title: "LO1: Design relational and non-relational database schemas",
+                                criteria: [
+                                    "Data models are normalized to Third Normal Form (3NF) standards.",
+                                    "Indexes and foreign key constraints are configured for query speed."
+                                ],
+                                content: "Knowledge: SQL syntax, ER Diagrams, Database Normalization.\nSkills: Schema design, ORM mapping.",
+                                methods: "Database Build Practical Task, Written Exam",
+                                resources: "PostgreSQL/MongoDB server, Database GUI"
+                            }
+                        ]
+                    },
+                    {
+                        id: "m3",
+                        code: "ICT411303",
+                        title: "Deploy, Test, and Maintain Cloud Applications",
+                        hours: 60,
+                        descriptor: "Covers automated unit testing, containerization with Docker, and automated CI/CD cloud deployment pipelines.",
+                        learningOutcomes: [
+                            {
+                                id: "lo31",
+                                title: "LO1: Execute automated unit and integration tests",
+                                criteria: [
+                                    "Automated unit tests are created for critical business logic modules.",
+                                    "Code coverage reports are generated against quality assurance benchmarks."
+                                ],
+                                content: "Knowledge: Testing frameworks, Test Driven Development.\nSkills: Test automation, debugging.",
+                                methods: "Code Test Execution Assessment",
+                                resources: "Jest runtime, CI testing environment"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "cbc-002",
+                title: "Solar PV Systems Installation & Maintenance",
+                code: "ALT31112-NC3",
+                sector: "Renewable Energy & Electrical Engineering",
+                level: "Level 3 / NC III",
+                status: "Approved",
+                version: "1.0",
+                description: "Covers competencies required to perform site assessments, system sizing, physical installation, electrical wiring, commissioning, and preventive maintenance for grid-tied and off-grid Solar Photovoltaic (PV) power systems.",
+                entryRequirements: "Completion of Electrical Installation Level 2 or 10th grade with basic electrical trade background.",
+                trainerQualifications: "1. NTTC Level III holder in Renewable Energy.\n2. Minimum 2 years certified solar PV installation practitioner.",
+                assessmentStrategy: "Practical demonstration on solar installation test rig, oral questioning, and safety inspection protocol execution.",
+                resourceRequirements: "Solar Panels (300W+), String Inverters, Charge Controllers, Deep Cycle Battery Bank, Solar Multimeters, Safety Harnesses.",
+                basicModules: [
+                    { id: "b1", code: "500311101", title: "Workplace Safety & Hazard Identification", hours: 10, descriptor: "Covers working at heights, DC high voltage safety, and PPE standards." },
+                    { id: "b2", code: "500311102", title: "Participate in Team Workplace Communication", hours: 10, descriptor: "Covers site logs and safety tool-box meetings." }
+                ],
+                commonModules: [
+                    { id: "c1", code: "ALT211201", title: "Use Electrical Hand & Power Tools", hours: 20, descriptor: "Covers wire strippers, torque wrenches, and conduit benders." },
+                    { id: "c2", code: "ALT211202", title: "Interpret Renewable Energy Technical Drawings", hours: 40, descriptor: "Covers single-line electrical diagrams and roof structural layouts." }
+                ],
+                coreModules: [
+                    {
+                        id: "m1",
+                        code: "ALT311301",
+                        title: "Perform Solar PV Site Assessment & System Sizing",
+                        hours: 60,
+                        descriptor: "Covers solar irradiance calculation, roof shading analysis using solar pathfinders, and inverter matching.",
+                        learningOutcomes: [
+                            {
+                                id: "lo1",
+                                title: "LO1: Conduct solar irradiance and roof structural assessment",
+                                criteria: [
+                                    "Site shading factor is measured using solar pathfinder or digital shade analyzer.",
+                                    "Roof load bearing capacity is verified per engineering codes."
+                                ],
+                                content: "Knowledge: Sun path diagrams, tilt angle calculations, structural loads.\nSkills: On-site measurement, shade modeling.",
+                                methods: "Site Inspection Practical Demonstration",
+                                resources: "Inclinometer, Solar Pathfinder, Measuring Tape"
+                            }
+                        ]
+                    },
+                    {
+                        id: "m2",
+                        code: "ALT311302",
+                        title: "Install Solar PV Racking, Modules & Electrical Inverters",
+                        hours: 120,
+                        descriptor: "Covers mounting rail installation, DC array wiring, combiner boxes, and grid-tied inverter connection.",
+                        learningOutcomes: [
+                            {
+                                id: "lo2",
+                                title: "LO1: Mount structural racking and solar PV panels",
+                                criteria: [
+                                    "Racking rails are aligned and torqued to manufacturer specs.",
+                                    "PV modules are anchored securely with waterproof roof penetrations."
+                                ],
+                                content: "Knowledge: Mounting systems, waterproofing flashing, wind load ratings.\nSkills: Mechanical assembly, torque application.",
+                                methods: "Hands-on Roof Rig Assembly Test",
+                                resources: "Racking hardware, PV panels, Torque wrench"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "cbc-003",
+                title: "Automotive Technology & Vehicle Diagnostics",
+                code: "ALT20115-NC2",
+                sector: "Automotive & Heavy Equipment",
+                level: "Level 2 / NC II",
+                status: "Approved",
+                version: "1.2",
+                description: "Covers competencies required to inspect, service, diagnose, and repair automotive engine management systems, electronic ignition, braking systems, and powertrain components.",
+                entryRequirements: "High school diploma or basic vocational trade certificate.",
+                trainerQualifications: "National TVET Trainer Certificate (NTTC Level II) in Automotive Servicing.",
+                assessmentStrategy: "Hands-on diagnostic troubleshooting on operational vehicle engine rigs and written theory exam.",
+                resourceRequirements: "OBD-II Diagnostic Scanners, Digital Oscilloscopes, Hydraulic Lifts, Engine Test Stands, Mechanic Hand Tool Sets.",
+                basicModules: [
+                    { id: "b1", code: "500311103", title: "Apply Workplace Safety & Health Practices", hours: 10, descriptor: "Covers automotive shop hazard mitigation and chemical handling." }
+                ],
+                commonModules: [
+                    { id: "c1", code: "ALT111201", title: "Perform Mensuration and Precision Calculations", hours: 30, descriptor: "Covers micrometers, dial indicators, and cylinder bore measuring." }
+                ],
+                coreModules: [
+                    {
+                        id: "m1",
+                        code: "ALT211301",
+                        title: "Diagnose Electronic Engine Management Systems (OBD-II)",
+                        hours: 100,
+                        descriptor: "Covers reading Diagnostic Trouble Codes (DTCs), sensor testing (MAF, O2, TPS), and fuel injection troubleshooting.",
+                        learningOutcomes: [
+                            {
+                                id: "lo1",
+                                title: "LO1: Scan and interpret ECU diagnostic trouble codes",
+                                criteria: [
+                                    "OBD-II scanner is connected to vehicle DLC port safely.",
+                                    "Freeze-frame data and fault codes are recorded and cross-referenced with service manual."
+                                ],
+                                content: "Knowledge: Automotive CAN-bus networks, Sensor signals, ECU architecture.\nSkills: OBD scanner operation, multimeter diagnostic.",
+                                methods: "Practical Vehicle Fault Diagnosis Test",
+                                resources: "OBD Scanner tool, Operable Training Vehicle, Service Manuals"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        createApp({
+            setup() {
+                // Reactive State
+                const activeTab = ref('dashboard');
+                const editorSubTab = ref('general');
+                const searchQuery = ref('');
+                const filterSector = ref('');
+                const filterLevel = ref('');
+
+                // Curricula Database
+                const curricula = ref([]);
+                const activeCurriculum = ref({});
+
+                // Modal & Toast UI state
+                const modal = ref({ show: false, title: '', message: '', action: null });
+                const toasts = ref([]);
+
+                // LocalStorage Helper
+                const loadFromStorage = () => {
+                    const saved = localStorage.getItem('tvet_cbc_studio_data');
+                    if (saved) {
+                        try {
+                            curricula.value = JSON.parse(saved);
+                        } catch(e) {
+                            curricula.value = JSON.parse(JSON.stringify(DEFAULT_CURRICULA));
+                        }
+                    } else {
+                        curricula.value = JSON.parse(JSON.stringify(DEFAULT_CURRICULA));
+                    }
+                    if (curricula.value.length > 0) {
+                        activeCurriculum.value = JSON.parse(JSON.stringify(curricula.value[0]));
+                    }
+                };
+
+                const saveToStorage = () => {
+                    localStorage.setItem('tvet_cbc_studio_data', JSON.stringify(curricula.value));
+                };
+
+                onMounted(() => {
+                    loadFromStorage();
+                });
+
+                // Computed Filters & Stats
+                const uniqueSectors = computed(() => {
+                    const sectors = curricula.value.map(c => c.sector).filter(Boolean);
+                    return [...new Set(sectors)];
+                });
+
+                const filteredCurricula = computed(() => {
+                    return curricula.value.filter(item => {
+                        const matchesSearch = !searchQuery.value || 
+                            item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+                            item.code.toLowerCase().includes(searchQuery.value.toLowerCase());
+                        const matchesSector = !filterSector.value || item.sector === filterSector.value;
+                        const matchesLevel = !filterLevel.value || item.level === filterLevel.value;
+                        return matchesSearch && matchesSector && matchesLevel;
+                    });
+                });
+
+                const calculateTotalHours = (curr) => {
+                    if (!curr) return 0;
+                    const bHrs = (curr.basicModules || []).reduce((acc, m) => acc + (Number(m.hours) || 0), 0);
+                    const cHrs = (curr.commonModules || []).reduce((acc, m) => acc + (Number(m.hours) || 0), 0);
+                    const kHrs = (curr.coreModules || []).reduce((acc, m) => acc + (Number(m.hours) || 0), 0);
+                    return bHrs + cHrs + kHrs;
+                };
+
+                const stats = computed(() => {
+                    let totalHours = 0;
+                    let totalCoreModules = 0;
+                    curricula.value.forEach(c => {
+                        totalHours += calculateTotalHours(c);
+                        totalCoreModules += (c.coreModules || []).length;
+                    });
+                    return {
+                        totalHours,
+                        totalCoreModules,
+                        sectorsCount: uniqueSectors.value.length
+                    };
+                });
+
+                // Helper Toast Notification
+                const showToast = (message, type = 'info') => {
+                    const id = Date.now();
+                    toasts.value.push({ id, message, type });
+                    setTimeout(() => {
+                        toasts.value = toasts.value.filter(t => t.id !== id);
+                    }, 3000);
+                };
+
+                // Helper Status Class
+                const getStatusBadgeClass = (status) => {
+                    switch(status) {
+                        case 'Approved': return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
+                        case 'Under Review': return 'bg-amber-100 text-amber-800 border border-amber-200';
+                        default: return 'bg-slate-100 text-slate-700 border border-slate-200';
+                    }
+                };
+
+                // CRUD Functions
+                const createNewCurriculum = () => {
+                    const newId = 'cbc-' + String(Date.now()).slice(-4);
+                    const newObj = {
+                        id: newId,
+                        title: "New Qualification Title",
+                        code: "CODE-" + newId.toUpperCase(),
+                        sector: "Technical & Vocational Sector",
+                        level: "Level 3 / NC III",
+                        status: "Draft",
+                        version: "1.0",
+                        description: "Provide a detailed overview of course objectives and occupational alignment.",
+                        entryRequirements: "Specify trainee prerequisites.",
+                        trainerQualifications: "Specify trainer certifications and industry experience.",
+                        assessmentStrategy: "Specify institutional assessment methods.",
+                        resourceRequirements: "List required tools, machinery, and facilities.",
+                        basicModules: [],
+                        commonModules: [],
+                        coreModules: []
+                    };
+
+                    curricula.value.unshift(newObj);
+                    activeCurriculum.value = JSON.parse(JSON.stringify(newObj));
+                    saveToStorage();
+                    activeTab.value = 'editor';
+                    editorSubTab.value = 'general';
+                    showToast('Created new qualification template.', 'success');
+                };
+
+                const selectAndEdit = (item) => {
+                    activeCurriculum.value = JSON.parse(JSON.stringify(item));
+                    activeTab.value = 'editor';
+                    editorSubTab.value = 'general';
+                };
+
+                const selectAndPrint = (item) => {
+                    activeCurriculum.value = JSON.parse(JSON.stringify(item));
+                    activeTab.value = 'print';
+                };
+
+                const saveCurriculum = (notify = true) => {
+                    const idx = curricula.value.findIndex(c => c.id === activeCurriculum.value.id);
+                    if (idx !== -1) {
+                        curricula.value[idx] = JSON.parse(JSON.stringify(activeCurriculum.value));
+                    } else {
+                        curricula.value.unshift(JSON.parse(JSON.stringify(activeCurriculum.value)));
+                    }
+                    saveToStorage();
+                    if (notify) showToast('Curriculum saved successfully!', 'success');
+                };
+
+                const duplicateCurriculum = (item) => {
+                    const copy = JSON.parse(JSON.stringify(item));
+                    copy.id = 'cbc-' + String(Date.now()).slice(-4);
+                    copy.title = copy.title + ' (Copy)';
+                    copy.code = copy.code + '-COPY';
+                    curricula.value.unshift(copy);
+                    saveToStorage();
+                    showToast('Curriculum duplicated successfully.', 'success');
+                };
+
+                const confirmDelete = (item) => {
+                    modal.value = {
+                        show: true,
+                        title: 'Delete Qualification CBC?',
+                        message: `Are you sure you want to permanently remove "${item.title}" (${item.code})? This action cannot be undone.`,
+                        action: () => {
+                            curricula.value = curricula.value.filter(c => c.id !== item.id);
+                            if (activeCurriculum.value.id === item.id && curricula.value.length > 0) {
+                                activeCurriculum.value = JSON.parse(JSON.stringify(curricula.value[0]));
+                            }
+                            saveToStorage();
+                            showToast('Curriculum deleted.', 'info');
+                        }
+                    };
+                };
+
+                const confirmModalAction = () => {
+                    if (modal.value.action) modal.value.action();
+                    modal.value.show = false;
+                };
+
+                // Dynamic Module & LO Helpers
+                const addBasicModule = () => {
+                    if (!activeCurriculum.value.basicModules) activeCurriculum.value.basicModules = [];
+                    activeCurriculum.value.basicModules.push({
+                        id: 'b-' + Date.now(),
+                        code: 'BASIC-0' + (activeCurriculum.value.basicModules.length + 1),
+                        title: 'New Basic Competency',
+                        hours: 10,
+                        descriptor: 'Workplace foundational skill unit.'
+                    });
+                };
+
+                const removeBasicModule = (idx) => {
+                    activeCurriculum.value.basicModules.splice(idx, 1);
+                };
+
+                const addCommonModule = () => {
+                    if (!activeCurriculum.value.commonModules) activeCurriculum.value.commonModules = [];
+                    activeCurriculum.value.commonModules.push({
+                        id: 'c-' + Date.now(),
+                        code: 'COMM-0' + (activeCurriculum.value.commonModules.length + 1),
+                        title: 'New Common Sector Competency',
+                        hours: 20,
+                        descriptor: 'Sector-wide technical competency.'
+                    });
+                };
+
+                const removeCommonModule = (idx) => {
+                    activeCurriculum.value.commonModules.splice(idx, 1);
+                };
+
+                const addCoreModule = () => {
+                    if (!activeCurriculum.value.coreModules) activeCurriculum.value.coreModules = [];
+                    activeCurriculum.value.coreModules.push({
+                        id: 'm-' + Date.now(),
+                        code: 'CORE-0' + (activeCurriculum.value.coreModules.length + 1),
+                        title: 'New Occupational Core Module',
+                        hours: 40,
+                        descriptor: 'Detailed occupational module describing specific trade output.',
+                        learningOutcomes: []
+                    });
+                };
+
+                const removeCoreModule = (mIdx) => {
+                    activeCurriculum.value.coreModules.splice(mIdx, 1);
+                };
+
+                const addLO = (mod) => {
+                    if (!mod.learningOutcomes) mod.learningOutcomes = [];
+                    const count = mod.learningOutcomes.length + 1;
+                    mod.learningOutcomes.push({
+                        id: 'lo-' + Date.now(),
+                        title: `LO${count}: Perform key operational outcome ${count}`,
+                        criteria: ['Standard operational procedure is performed according to workplace guidelines.'],
+                        content: 'Knowledge: Theory fundamentals.\nSkills: Hands-on execution.',
+                        methods: 'Practical Demonstration, Written Test',
+                        resources: 'Standard trade tools and equipment'
+                    });
+                };
+
+                const removeLO = (mod, loIdx) => {
+                    mod.learningOutcomes.splice(loIdx, 1);
+                };
+
+                const addCriteria = (lo) => {
+                    if (!lo.criteria) lo.criteria = [];
+                    lo.criteria.push('Performance is evaluated against standard technical specifications.');
+                };
+
+                const generateAILearningOutcomes = (mod) => {
+                    if (!mod.learningOutcomes) mod.learningOutcomes = [];
+                    mod.learningOutcomes = [
+                        {
+                            id: 'lo-ai-1',
+                            title: `LO1: Prepare materials, tools, and work plan for ${mod.title || 'operations'}`,
+                            criteria: [
+                                "Work instructions and technical drawings are reviewed according to job order.",
+                                "Tools and safety equipment are inspected for calibration and defects.",
+                                "Work area is prepared following 5S workplace guidelines."
+                            ],
+                            content: "Knowledge: Safety regulations, Technical reading.\nSkills: Tool inspection, Setup.",
+                            methods: "Demonstration, Oral Questioning",
+                            resources: "Safety gear, Technical manuals, Hand tools"
+                        },
+                        {
+                            id: 'lo-ai-2',
+                            title: `LO2: Execute core technical procedure for ${mod.title || 'operations'}`,
+                            criteria: [
+                                "Technical operations are carried out strictly observing safety protocols.",
+                                "Quality parameters are continuously monitored during task execution.",
+                                "Troubleshooting is applied to eliminate operational variances."
+                            ],
+                            content: "Knowledge: Applied trade principles, Fault diagnosis.\nSkills: Technical execution, Precision testing.",
+                            methods: "Practical Hands-on Evaluation",
+                            resources: "Workstation, Machinery, Test gauges"
+                        }
+                    ];
+                    showToast('Scaffolded standard TVET Learning Outcomes!', 'success');
+                };
+
+                // Data Import / Export
+                const exportSingleJSON = (item) => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(item, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", `${item.code || 'curriculum'}_CBC.json`);
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                    showToast('Downloaded Curriculum JSON!', 'success');
+                };
+
+                const exportAllJSON = () => {
+                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(curricula.value, null, 2));
+                    const downloadAnchor = document.createElement('a');
+                    downloadAnchor.setAttribute("href", dataStr);
+                    downloadAnchor.setAttribute("download", `TVET_Curricula_Backup_${new Date().toISOString().slice(0,10)}.json`);
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+                    showToast('Downloaded Full Database JSON Backup!', 'success');
+                };
+
+                const exportCSV = () => {
+                    let csvContent = "data:text/csv;charset=utf-8,Code,Qualification Title,Sector,Level,Nominal Hours,Status,Version\n";
+                    curricula.value.forEach(c => {
+                        const hrs = calculateTotalHours(c);
+                        const row = `"${c.code}","${c.title.replace(/"/g, '""')}","${c.sector}","${c.level}",${hrs},"${c.status}","${c.version}"`;
+                        csvContent += row + "\n";
+                    });
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `TVET_Curricula_Directory_${new Date().toISOString().slice(0,10)}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    showToast('Downloaded CSV Directory!', 'success');
+                };
+
+                const importJSON = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        try {
+                            const parsed = JSON.parse(event.target.result);
+                            if (Array.isArray(parsed)) {
+                                curricula.value = parsed;
+                            } else if (parsed.id && parsed.title) {
+                                const idx = curricula.value.findIndex(c => c.id === parsed.id);
+                                if (idx !== -1) curricula.value[idx] = parsed;
+                                else curricula.value.unshift(parsed);
+                            }
+                            saveToStorage();
+                            showToast('Successfully imported JSON curricula!', 'success');
+                        } catch(err) {
+                            showToast('Invalid JSON file format.', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+
+                const resetToDefaults = () => {
+                    modal.value = {
+                        show: true,
+                        title: 'Reset to Sample Data?',
+                        message: 'This will replace current local curricula with default TVET sample qualifications. Any custom curricula will be cleared.',
+                        action: () => {
+                            curricula.value = JSON.parse(JSON.stringify(DEFAULT_CURRICULA));
+                            activeCurriculum.value = JSON.parse(JSON.stringify(curricula.value[0]));
+                            saveToStorage();
+                            showToast('Database reset to sample TVET datasets.', 'info');
+                        }
+                    };
+                };
+
+                const triggerPrint = () => {
+                    window.print();
+                };
+
+                return {
+                    activeTab,
+                    editorSubTab,
+                    searchQuery,
+                    filterSector,
+                    filterLevel,
+                    curricula,
+                    activeCurriculum,
+                    uniqueSectors,
+                    filteredCurricula,
+                    stats,
+                    modal,
+                    toasts,
+                    calculateTotalHours,
+                    getStatusBadgeClass,
+                    createNewCurriculum,
+                    selectAndEdit,
+                    selectAndPrint,
+                    saveCurriculum,
+                    duplicateCurriculum,
+                    confirmDelete,
+                    confirmModalAction,
+                    addBasicModule,
+                    removeBasicModule,
+                    addCommonModule,
+                    removeCommonModule,
+                    addCoreModule,
+                    removeCoreModule,
+                    addLO,
+                    removeLO,
+                    addCriteria,
+                    generateAILearningOutcomes,
+                    exportSingleJSON,
+                    exportAllJSON,
+                    exportCSV,
+                    importJSON,
+                    resetToDefaults,
+                    triggerPrint
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
